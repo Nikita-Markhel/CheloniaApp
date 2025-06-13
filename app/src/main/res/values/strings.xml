@@ -1,0 +1,66 @@
+<resources>
+    <string name="app_name">Chelonia</string>
+    <string name="home_menu_title">Home</string>
+    <string name="calendar_menu_title">Calendar</string>
+    <string name="wallet_menu_title">Wallet</string>
+    <string name="analytics_menu_title">Analytics</string>
+    <string name="user_first_name_hint">First name</string>
+    <string name="user_last_name_hint">Last name</string>
+    <string name="unknown_first_name">Julius</string>
+    <string name="unknown_last_name">Caesar</string>
+    <string name="other_gender">other</string>
+    <string name="welcome_dialog_title">Nice to meet you, user</string>
+    <string name="next_btn_title">Next</string>
+    <string name="start_btn_title">Get Started</string>
+    <string name="finish_btn_title">Finish</string>
+    <string name="cancel_btn_title">Cancel</string>
+    <string name="photo_chooser_title"> Do you want to choose profile picture?</string>
+    <string name="user_image">User image</string>
+    <string name="choose_photo_btn_title">choose photo</string>
+    <string name="good_morning_msg">Good morning, </string>
+    <string name="good_day_msg">Good day, </string>
+    <string name="good_evening_msg">Good evening, </string>
+    <string name="good_night_msg">Good night, </string>
+    <string name="good_morning_msg2">Have a great day!</string>
+    <string name="good_day_msg2">I hope things are going well!</string>
+    <string name="good_evening_msg2">I hope your day was productive!</string>
+    <string name="good_night_msg2">I wish you sweet dreams</string>
+    <string name="welcome_to_msg">Welcome to </string>
+    <string name="second_step_title">What\'s your name?</string>
+    <string name="welcome_description">
+        Take control of your finances with an intuitive app
+        that offers a seamless experience and smart analytics!
+    </string>
+    <string name="anonymously">I want to continue anonymously</string>
+    <string name="third_step_title">What are your goals?</string>
+    <string name="rb1Title">To track daily expenses</string>
+    <string name="rb2Title">To save money efficiently</string>
+    <string name="rb3Title">To plan a monthly budget</string>
+    <string name="rb4Title">To reduce unnecessary spending</string>
+    <string name="rb5Title">To improve financial habits</string>
+    <string name="monday">Monday</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
+    <string name="default_country">Belarus</string>
+    <string name="default_date_number">15</string>
+    <string name="default_month">March</string>
+    <string name="default_time">17:00</string>
+    <string name="today_tab_title">Today</string>
+    <string name="tomorrow_tab_title">Tomorrow</string>
+    <string name="month_tab_title">Month</string>
+    <string name="default_note_title">Default_title</string>
+    <string name="work_time_title">work time</string>
+    <string name="add_work_time_btn">add work time</string>
+    <string name="default_description">
+        I recently had the opportunity to visit a theater
+        for the first time. It was an incredible
+        experience that I will never forget. 16:00-19:00
+    </string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="add_note">add note</string>
+</resources>

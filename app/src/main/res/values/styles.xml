@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="RoundedEditText" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/registration_edit_text_background</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <style name="CircularImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="CustomFabStyle" parent="Widget.MaterialComponents.FloatingActionButton">
+        <!-- Размер FAB (normal или mini) -->
+        <item name="fabSize">normal</item>
+        <!-- Цвет фона FAB, можно задать нужный цвет, например, olive -->
+        <item name="backgroundTint">@color/olive</item>
+        <!-- Цвет иконки -->
+        <item name="iconTint">@android:color/white</item>
+        <!-- Иконка FAB (ваш плюс) -->
+        <item name="android:src">@drawable/ic_plus</item>
+        <!-- Отключаем тень или задаем ее по желанию -->
+        <item name="elevation">6dp</item>
+    </style>
+
+
+    <style name="CustomTabLayoutStyle" parent="Widget.MaterialComponents.TabLayout">
+        <!-- Отключаем стандартный индикатор -->
+        <item name="tabIndicatorHeight">0dp</item>
+        <item name="tabIndicator">@null</item>
+        <!-- Убираем системный фон и отступы -->
+        <item name="tabBackground">@null</item>
+        <item name="tabRippleColor">@android:color/transparent</item>
+        <item name="tabPaddingStart">5dp</item>
+        <item name="tabPaddingEnd">5dp</item>
+        <item name="tabPaddingTop">0dp</item>
+        <item name="tabPaddingBottom">0dp</item>
+        <item name="tabMode">fixed</item>
+        <item name="tabGravity">fill</item>
+    </style>
+
+    <style name="CustomTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/inter</item>
+    </style>
+</resources>
