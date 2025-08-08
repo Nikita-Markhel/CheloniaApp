@@ -16,7 +16,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/main_navigation" />
+        app:navGraph="@navigation/main_navigation"/>
 
     <!-- Градиентный фон под BottomNavigationView -->
 
@@ -44,14 +44,16 @@
         android:backgroundTint="@color/transparent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddNote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/CustomFabStyle"
         android:contentDescription="@string/add_note"
-        android:backgroundTint="@color/organic_pale"
+        app:backgroundTint="@color/organic_pale"
         android:layout_marginBottom="15sp"
         app:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

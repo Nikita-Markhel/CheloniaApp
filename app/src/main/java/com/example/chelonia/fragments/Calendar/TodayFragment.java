@@ -7,18 +7,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.chelonia.MainActivity;
 import com.example.chelonia.R;
 import com.example.chelonia.adapters.NoteAdapter;
+import com.example.chelonia.database.AppDatabase;
+import com.example.chelonia.database.NoteDao;
 import com.example.chelonia.information.Note;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,8 +30,21 @@ public class TodayFragment extends Fragment {
 
     private final Handler timeHandler = new Handler(Looper.getMainLooper());
     private Runnable timeRunnable;
+    private boolean isEditing = false;
 
-    public TodayFragment() {
+    private List<Note> todayNotes;
+    private NoteAdapter noteAdapter;
+
+    public static TodayFragment instance;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        instance = this;
+    }
+
+    public static TodayFragment getInstance() {
+        return instance;
     }
 
     @Override
@@ -37,53 +54,146 @@ public class TodayFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.notesRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<Note> noteList = getNoteList();
-        NoteAdapter noteAdapter = new NoteAdapter(noteList);
+        todayNotes = getTodayNotes();
+        noteAdapter = new NoteAdapter(todayNotes);
         recyclerView.setAdapter(noteAdapter);
-        updateDateTime(view);
+
         return view;
     }
 
-    private List<Note> getNoteList(){
-        List<Note> notes = new ArrayList<>();
+    public void addEditableNote() {
+        if (isEditing) {
+            Note editableNote = todayNotes.get(0);
+            if (!editableNote.isEditable()) return;
 
-        notes.add(new Note("first note","","12:00",
-                true, 12, 0, 0));
+            RecyclerView recyclerView = requireView().findViewById(R.id.notesRecyclerView);
+            RecyclerView.ViewHolder holder = recyclerView.findViewHolderForAdapterPosition(0);
 
-        notes.add(new Note("first note","","12:00",
-                true, 12, 0, 0));
+            if (holder instanceof NoteAdapter.EditableNoteViewHolder) {
+                NoteAdapter.EditableNoteViewHolder editableHolder = (NoteAdapter.EditableNoteViewHolder) holder;
 
-        notes.add(new Note("first note","","12:00",
-                true, 12, 0, 0));
+                String title = editableHolder.noteTitle.getText().toString().trim();
+                String description = editableHolder.noteDescription.getText().toString().trim();
+                String time = editableHolder.noteTime.getText().toString().trim();
 
-        notes.add(new Note("first note","","12:00",
-                true, 12, 0, 0));
+                if (title.isEmpty()) title = "Без названия";
 
-        notes.add(new Note("first note","","12:00",
-                true, 12, 0, 0));
+                editableNote.setTitle(title);
+                editableNote.setDescription(description);
 
-        notes.add(new Note("first note","","12:00",
-                true, 12, 0, 0));
+                // Устанавливаем startTimeMillis на основе введённого времени или текущего времени
+                if (!time.isEmpty()) {
+                    try {
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                        Date parsedDate = sdf.parse(time);
+                        if (parsedDate != null) {
+                            Calendar timeCal = Calendar.getInstance();
+                            timeCal.setTime(parsedDate);
 
-        return notes;
+                            Calendar now = Calendar.getInstance();
+                            now.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
+                            now.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
+                            now.set(Calendar.SECOND, 0);
+                            now.set(Calendar.MILLISECOND, 0);
+
+                            editableNote.setStartTimeMillis(now.getTimeInMillis());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        editableNote.setStartTimeMillis(System.currentTimeMillis());
+                    }
+                } else {
+                    editableNote.setStartTimeMillis(System.currentTimeMillis());
+                }
+
+                editableNote.setEditable(false);
+
+                AppDatabase db = AppDatabase.getInstance(requireContext());
+                db.noteDao().insert(editableNote);
+
+                sortNotesByStartTime(todayNotes);
+                noteAdapter.notifyDataSetChanged();
+
+                isEditing = false;
+                updateFabStyle(false);
+            }
+
+        } else {
+            // Создаём новую редактируемую запись
+            Note editableNote = new Note("");
+            editableNote.setEditable(true);
+            editableNote.setDateMillis(getStartOfDayMillis(System.currentTimeMillis()));
+
+            todayNotes.add(0, editableNote);
+            sortNotesByStartTime(todayNotes);
+            noteAdapter.notifyDataSetChanged();
+            noteAdapter.notifyItemInserted(0);
+
+            isEditing = true;
+            updateFabStyle(true);
+        }
+    }
+
+    private List<Note> getTodayNotes() {
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        NoteDao noteDao = db.noteDao();
+
+        long todayStart = getStartOfDayMillis(System.currentTimeMillis());
+        long tomorrowStart = todayStart + 86400000L;
+
+        return noteDao.getNotesBetween(todayStart, tomorrowStart);
+    }
+
+    private void updateTodayNotes() {
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        NoteDao noteDao = db.noteDao();
+
+        long todayStart = getStartOfDayMillis(System.currentTimeMillis());
+        long tomorrowStart = todayStart + 86400000L;
+
+        todayNotes.clear();
+        todayNotes.addAll(noteDao.getNotesBetween(todayStart, tomorrowStart));
+        sortNotesByStartTime(todayNotes);
+        noteAdapter.notifyDataSetChanged();
+    }
+
+    private void sortNotesByStartTime(List<Note> notes) {
+        notes.sort((n1, n2) -> {
+            Long t1 = n1.getStartTimeMillis() != null ? n1.getStartTimeMillis() : 0;
+            Long t2 = n2.getStartTimeMillis() != null ? n2.getStartTimeMillis() : 0;
+            return t1.compareTo(t2);
+        });
+    }
+
+    private long getStartOfDayMillis(long timeMillis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(timeMillis);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         startTimeUpdates();
+        updateTodayNotes();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         stopTimeUpdates();
+
+        // Если пользователь ушёл с экрана в процессе редактирования — автоматически сохраняем запись
+        if (isEditing) {
+            addEditableNote();
+        }
     }
 
     private void startTimeUpdates() {
-        long currentMillis = System.currentTimeMillis();
-        long delay = 60000 - (currentMillis % 60000);
-
         timeRunnable = new Runnable() {
             @Override
             public void run() {
@@ -91,10 +201,14 @@ public class TodayFragment extends Fragment {
                 if (rootView != null) {
                     updateDateTime(rootView);
                 }
-                timeHandler.postDelayed(this, 60000);
+
+                updateTodayNotes();
+
+                timeHandler.postDelayed(this, 60_000);
             }
         };
-        timeHandler.postDelayed(timeRunnable, delay);
+
+        timeHandler.post(timeRunnable);
     }
 
     private void stopTimeUpdates() {
@@ -111,14 +225,12 @@ public class TodayFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         Locale locale = Locale.getDefault();
 
-        Locale localeCountry = Locale.getDefault();
-
         String dayOfWeek = new SimpleDateFormat("EEEE", locale).format(calendar.getTime());
         int dayNum = Integer.parseInt(new SimpleDateFormat("d", locale).format(calendar.getTime()));
         String ordinalDate = getOrdinalFor(dayNum);
         String month = new SimpleDateFormat("MMMM", locale).format(calendar.getTime());
         String time = new SimpleDateFormat("HH:mm", locale).format(calendar.getTime());
-        String country = localeCountry.getDisplayCountry();
+        String country = locale.getDisplayCountry();
 
         dayOfWeekTextView.setText(capitalize(dayOfWeek));
         dateNumberTextView.setText(ordinalDate);
@@ -131,6 +243,7 @@ public class TodayFragment extends Fragment {
         if (input == null || input.isEmpty()) return input;
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
+
     private String getOrdinalFor(int number) {
         if (number % 100 >= 11 && number % 100 <= 13) {
             return number + "th";
@@ -140,6 +253,12 @@ public class TodayFragment extends Fragment {
             case 2: return number + "nd";
             case 3: return number + "rd";
             default: return number + "th";
+        }
+    }
+
+    private void updateFabStyle(boolean editing) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).updateFabStyle(editing);
         }
     }
 }

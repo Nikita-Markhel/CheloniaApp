@@ -7,43 +7,46 @@
     android:padding="7dp"
     android:layout_marginBottom="10dp">
 
-    <TextView
-        android:id="@+id/note_time"
+    <EditText
+        android:id="@+id/note_time_edit"
         android:background="@drawable/note_time_bg"
+        android:inputType="time"
         android:paddingVertical="8dp"
         android:paddingHorizontal="3dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/slate"
         android:textSize="12sp"
-        android:text="@string/default_time"
+        android:hint="@string/default_time"
+        android:autofillHints="@string/default_time"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <TextView
-        android:id="@+id/note_title"
+    <EditText
+        android:id="@+id/note_title_edit"
         android:layout_width="wrap_content"
         android:maxWidth="80sp"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif"
-        android:text="@string/default_note_title"
+        android:hint="@string/default_note_title"
         android:textColor="@color/black"
-        android:textSize="15sp"
+        android:textSize="12sp"
         android:maxLines="2"
         android:ellipsize="end"
         android:singleLine="false"
         android:layout_marginStart="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/note_time"
+        app:layout_constraintStart_toEndOf="@+id/note_time_edit"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/description"
+    <EditText
+        android:id="@+id/description_edit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="190sp"
-        android:text="@string/default_description"
+        android:textSize="12sp"
+        android:hint="@string/default_note_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

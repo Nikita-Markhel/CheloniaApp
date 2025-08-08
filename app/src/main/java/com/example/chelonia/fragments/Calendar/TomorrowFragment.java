@@ -1,66 +1,251 @@
 package com.example.chelonia.fragments.Calendar;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.chelonia.MainActivity;
 import com.example.chelonia.R;
+import com.example.chelonia.adapters.NoteAdapter;
+import com.example.chelonia.database.AppDatabase;
+import com.example.chelonia.database.NoteDao;
+import com.example.chelonia.information.Note;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link TomorrowFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 public class TomorrowFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private final Handler timeHandler = new Handler(Looper.getMainLooper());
+    private Runnable timeRunnable;
+    private boolean isEditing = false;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private List<Note> tomorrowNotes;
+    private NoteAdapter noteAdapter;
 
-    public TomorrowFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment TomorrowFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static TomorrowFragment newInstance(String param1, String param2) {
-        TomorrowFragment fragment = new TomorrowFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    public static TomorrowFragment instance;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        instance = this;
+    }
+
+    public static TomorrowFragment getInstance() {
+        return instance;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_tomorrow, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_today, container, false); // используем ту же разметку
+
+        RecyclerView recyclerView = view.findViewById(R.id.notesRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        tomorrowNotes = getTomorrowNotes();
+        noteAdapter = new NoteAdapter(tomorrowNotes);
+        recyclerView.setAdapter(noteAdapter);
+
+        return view;
+    }
+
+    public void addEditableNote() {
+        if (isEditing) {
+            Note editableNote = tomorrowNotes.get(0);
+            if (!editableNote.isEditable()) return;
+
+            RecyclerView recyclerView = requireView().findViewById(R.id.notesRecyclerView);
+            RecyclerView.ViewHolder holder = recyclerView.findViewHolderForAdapterPosition(0);
+
+            if (holder instanceof NoteAdapter.EditableNoteViewHolder) {
+                NoteAdapter.EditableNoteViewHolder editableHolder = (NoteAdapter.EditableNoteViewHolder) holder;
+
+                String title = editableHolder.noteTitle.getText().toString().trim();
+                String description = editableHolder.noteDescription.getText().toString().trim();
+                String time = editableHolder.noteTime.getText().toString().trim();
+
+                if (title.isEmpty()) title = "Без названия";
+
+                editableNote.setTitle(title);
+                editableNote.setDescription(description);
+
+                // Привязываем к завтрашней дате
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+
+                if (!time.isEmpty()) {
+                    try {
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                        Date parsed = sdf.parse(time);
+                        if (parsed != null) {
+                            Calendar parsedCal = Calendar.getInstance();
+                            parsedCal.setTime(parsed);
+
+                            calendar.set(Calendar.HOUR_OF_DAY, parsedCal.get(Calendar.HOUR_OF_DAY));
+                            calendar.set(Calendar.MINUTE, parsedCal.get(Calendar.MINUTE));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                editableNote.setStartTimeMillis(calendar.getTimeInMillis());
+                editableNote.setEditable(false);
+
+                AppDatabase.getInstance(requireContext()).noteDao().insert(editableNote);
+
+                sortNotesByStartTime(tomorrowNotes);
+                noteAdapter.notifyDataSetChanged();
+
+                isEditing = false;
+                updateFabStyle(false);
+            }
+        } else {
+            Note editableNote = new Note("");
+            editableNote.setEditable(true);
+
+            long tomorrowStart = getStartOfTomorrowMillis();
+            editableNote.setDateMillis(tomorrowStart);
+
+            tomorrowNotes.add(0, editableNote);
+            sortNotesByStartTime(tomorrowNotes);
+            noteAdapter.notifyDataSetChanged();
+            noteAdapter.notifyItemInserted(0);
+
+            isEditing = true;
+            updateFabStyle(true);
+        }
+    }
+
+    private List<Note> getTomorrowNotes() {
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        NoteDao noteDao = db.noteDao();
+
+        long tomorrowStart = getStartOfTomorrowMillis();
+        long dayAfterTomorrowStart = tomorrowStart + 86400000L;
+
+        return noteDao.getNotesBetween(tomorrowStart, dayAfterTomorrowStart);
+    }
+
+    private void updateTomorrowNotes() {
+        tomorrowNotes.clear();
+        tomorrowNotes.addAll(getTomorrowNotes());
+        sortNotesByStartTime(tomorrowNotes);
+        noteAdapter.notifyDataSetChanged();
+    }
+
+    private void sortNotesByStartTime(List<Note> notes) {
+        notes.sort(Comparator.comparingLong(n -> n.getStartTimeMillis() != null ? n.getStartTimeMillis() : 0));
+    }
+
+    private long getStartOfTomorrowMillis() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        return calendar.getTimeInMillis();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        startTimeUpdates();
+        updateTomorrowNotes();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopTimeUpdates();
+        if (isEditing) addEditableNote();
+    }
+
+    private void startTimeUpdates() {
+        timeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                View rootView = getView();
+                if (rootView != null) updateDateTime(rootView);
+                updateTomorrowNotes();
+                timeHandler.postDelayed(this, 60_000);
+            }
+        };
+        timeHandler.post(timeRunnable);
+    }
+
+    private void stopTimeUpdates() {
+        timeHandler.removeCallbacks(timeRunnable);
+    }
+
+    private void updateDateTime(View view) {
+        TextView dayOfWeekTextView = view.findViewById(R.id.dayOfWeek);
+        TextView dateNumberTextView = view.findViewById(R.id.dateNumber);
+        TextView monthTextView = view.findViewById(R.id.month);
+        TextView timeTextView = view.findViewById(R.id.time);
+        TextView countryTextView = view.findViewById(R.id.country);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        Locale locale = Locale.getDefault();
+
+        String dayOfWeek = new SimpleDateFormat("EEEE", locale).format(calendar.getTime());
+        int dayNum = Integer.parseInt(new SimpleDateFormat("d", locale).format(calendar.getTime()));
+        String ordinalDate = getOrdinalFor(dayNum);
+        String month = new SimpleDateFormat("MMMM", locale).format(calendar.getTime());
+        String country = locale.getDisplayCountry();
+
+        dayOfWeekTextView.setText(capitalize(dayOfWeek));
+        dateNumberTextView.setText(ordinalDate);
+        monthTextView.setText(capitalize(month.toLowerCase()));
+        countryTextView.setText(country);
+
+        // Показываем ближайшее время события на завтра
+        if (!tomorrowNotes.isEmpty()) {
+            Long earliest = tomorrowNotes.stream()
+                    .filter(n -> n.getStartTimeMillis() != null)
+                    .map(Note::getStartTimeMillis)
+                    .min(Long::compare)
+                    .orElse(null);
+            if (earliest != null) {
+                String earliestTime = new SimpleDateFormat("HH:mm", locale).format(new Date(earliest));
+                timeTextView.setText(earliestTime);
+            } else {
+                timeTextView.setText("--:--");
+            }
+        } else {
+            timeTextView.setText("--:--");
+        }
+    }
+
+    private String capitalize(String input) {
+        if (input == null || input.isEmpty()) return input;
+        return input.substring(0, 1).toUpperCase() + input.substring(1);
+    }
+
+    private String getOrdinalFor(int number) {
+        if (number % 100 >= 11 && number % 100 <= 13) return number + "th";
+        switch (number % 10) {
+            case 1: return number + "st";
+            case 2: return number + "nd";
+            case 3: return number + "rd";
+            default: return number + "th";
+        }
+    }
+
+    private void updateFabStyle(boolean editing) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).updateFabStyle(editing);
+        }
     }
 }

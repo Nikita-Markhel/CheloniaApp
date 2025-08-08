@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.1"
+agp = "8.12.0"
 androidxActivity = "1.6.1"
 blurry = "3.0.0"
 fragment = "1.8.6"
@@ -13,10 +13,13 @@ constraintlayout = "2.1.4"
 materialVersion = "1.9.0"
 navigationFragment = "2.8.9"
 navigationUi = "2.8.9"
+roomRuntime = "2.7.2"
 
 [libraries]
 androidx-activity-v161 = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 blurry = { module = "jp.wasabeef:blurry", version.ref = "blurry" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

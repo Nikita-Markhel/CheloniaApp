@@ -176,5 +176,4 @@ public class CalendarFragment extends Fragment {
             avatarImageView.setImageResource(R.drawable.ic_launcher_foreground);
         }
     }
-
 }

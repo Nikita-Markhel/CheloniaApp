@@ -32,15 +32,22 @@ android {
 }
 
 dependencies {
-    implementation (libs.material.v190)
-    implementation (libs.androidx.activity.v161)
-    implementation (libs.androidx.fragment)
+    // --- UI и AndroidX
+    implementation(libs.material.v190)
+    implementation(libs.androidx.activity.v161)
+    implementation(libs.androidx.fragment)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+
+    // --- Room
+    implementation (libs.androidx.room.runtime)
+    annotationProcessor (libs.androidx.room.compiler)
+
+    // --- Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
