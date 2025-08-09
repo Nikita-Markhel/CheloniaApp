@@ -5,13 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.example.chelonia.Interfaces.NoteEditable;
 import com.example.chelonia.R;
 import com.example.chelonia.adapters.TabsPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
@@ -35,6 +33,8 @@ import java.util.Locale;
 
 public class CalendarFragment extends Fragment {
 
+    private TabsPagerAdapter adapter;
+    private ViewPager2 viewPager;
     private static final String ACTION_REGISTRATION_COMPLETE = "com.example.chelonia.REGISTRATION_COMPLETE";
 
     @Override
@@ -63,9 +63,10 @@ public class CalendarFragment extends Fragment {
         );
 
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
-        ViewPager2 viewPager = view.findViewById(R.id.viewPager);
+        // Используем поля класса, убираем тип (var)
+        viewPager = view.findViewById(R.id.viewPager);
 
-        TabsPagerAdapter adapter = new TabsPagerAdapter(requireActivity());
+        adapter = new TabsPagerAdapter(requireActivity());
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
@@ -115,6 +116,19 @@ public class CalendarFragment extends Fragment {
                 onTabSelected(tab);
             }
         });
+    }
+
+    @Nullable
+    public NoteEditable getActiveNoteEditable() {
+        if (viewPager == null || adapter == null) return null;
+        int pos = viewPager.getCurrentItem();
+        Log.d("CalendarFragment", "Current ViewPager position: " + pos);
+        Fragment f = adapter.getFragmentIfExists(pos);
+        Log.d("CalendarFragment", "Fragment at pos: " + (f != null ? f.getClass().getSimpleName() : "null"));
+        if (f instanceof NoteEditable) {
+            return (NoteEditable) f;
+        }
+        return null;
     }
 
 

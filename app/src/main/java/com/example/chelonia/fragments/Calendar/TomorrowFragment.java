@@ -1,5 +1,6 @@
 package com.example.chelonia.fragments.Calendar;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.chelonia.Interfaces.NoteEditable;
 import com.example.chelonia.MainActivity;
 import com.example.chelonia.R;
 import com.example.chelonia.adapters.NoteAdapter;
@@ -21,9 +23,12 @@ import com.example.chelonia.database.NoteDao;
 import com.example.chelonia.information.Note;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
-public class TomorrowFragment extends Fragment {
+public class TomorrowFragment extends Fragment implements NoteEditable {
 
     private final Handler timeHandler = new Handler(Looper.getMainLooper());
     private Runnable timeRunnable;
@@ -46,7 +51,7 @@ public class TomorrowFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_today, container, false); // используем ту же разметку
+        View view = inflater.inflate(R.layout.fragment_tomorrow, container, false);
 
         RecyclerView recyclerView = view.findViewById(R.id.notesRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -58,6 +63,7 @@ public class TomorrowFragment extends Fragment {
         return view;
     }
 
+    @Override
     public void addEditableNote() {
         if (isEditing) {
             Note editableNote = tomorrowNotes.get(0);
@@ -78,43 +84,50 @@ public class TomorrowFragment extends Fragment {
                 editableNote.setTitle(title);
                 editableNote.setDescription(description);
 
-                // Привязываем к завтрашней дате
-                Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_YEAR, 1);
-
                 if (!time.isEmpty()) {
                     try {
                         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        Date parsed = sdf.parse(time);
-                        if (parsed != null) {
-                            Calendar parsedCal = Calendar.getInstance();
-                            parsedCal.setTime(parsed);
+                        Date parsedDate = sdf.parse(time);
+                        if (parsedDate != null) {
+                            Calendar timeCal = Calendar.getInstance();
+                            timeCal.setTime(parsedDate);
 
-                            calendar.set(Calendar.HOUR_OF_DAY, parsedCal.get(Calendar.HOUR_OF_DAY));
-                            calendar.set(Calendar.MINUTE, parsedCal.get(Calendar.MINUTE));
+                            Calendar tomorrow = Calendar.getInstance();
+                            tomorrow.add(Calendar.DAY_OF_YEAR, 1); // Завтра
+                            tomorrow.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
+                            tomorrow.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
+                            tomorrow.set(Calendar.SECOND, 0);
+                            tomorrow.set(Calendar.MILLISECOND, 0);
+
+                            editableNote.setStartTimeMillis(tomorrow.getTimeInMillis());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        editableNote.setStartTimeMillis(System.currentTimeMillis() + 86400000L);
                     }
+                } else {
+                    editableNote.setStartTimeMillis(System.currentTimeMillis() + 86400000L);
                 }
 
-                editableNote.setStartTimeMillis(calendar.getTimeInMillis());
                 editableNote.setEditable(false);
 
-                AppDatabase.getInstance(requireContext()).noteDao().insert(editableNote);
+                AppDatabase db = AppDatabase.getInstance(requireContext());
+                db.noteDao().insert(editableNote);
 
                 sortNotesByStartTime(tomorrowNotes);
                 noteAdapter.notifyDataSetChanged();
 
                 isEditing = false;
-                updateFabStyle(false);
+                Activity a = getActivity();
+                if (a instanceof MainActivity) {
+                    ((MainActivity) a).updateFabStyle(false); // или false
+                }
             }
+
         } else {
             Note editableNote = new Note("");
             editableNote.setEditable(true);
-
-            long tomorrowStart = getStartOfTomorrowMillis();
-            editableNote.setDateMillis(tomorrowStart);
+            editableNote.setDateMillis(getStartOfDayMillis(System.currentTimeMillis() + 86400000L));
 
             tomorrowNotes.add(0, editableNote);
             sortNotesByStartTime(tomorrowNotes);
@@ -122,7 +135,10 @@ public class TomorrowFragment extends Fragment {
             noteAdapter.notifyItemInserted(0);
 
             isEditing = true;
-            updateFabStyle(true);
+            Activity a = getActivity();
+            if (a instanceof MainActivity) {
+                ((MainActivity) a).updateFabStyle(true); // или false
+            }
         }
     }
 
@@ -130,30 +146,40 @@ public class TomorrowFragment extends Fragment {
         AppDatabase db = AppDatabase.getInstance(requireContext());
         NoteDao noteDao = db.noteDao();
 
-        long tomorrowStart = getStartOfTomorrowMillis();
+        long tomorrowStart = getStartOfDayMillis(System.currentTimeMillis() + 86400000L);
         long dayAfterTomorrowStart = tomorrowStart + 86400000L;
 
         return noteDao.getNotesBetween(tomorrowStart, dayAfterTomorrowStart);
     }
 
     private void updateTomorrowNotes() {
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        NoteDao noteDao = db.noteDao();
+
+        long tomorrowStart = getStartOfDayMillis(System.currentTimeMillis() + 86400000L);
+        long dayAfterTomorrowStart = tomorrowStart + 86400000L;
+
         tomorrowNotes.clear();
-        tomorrowNotes.addAll(getTomorrowNotes());
+        tomorrowNotes.addAll(noteDao.getNotesBetween(tomorrowStart, dayAfterTomorrowStart));
         sortNotesByStartTime(tomorrowNotes);
         noteAdapter.notifyDataSetChanged();
     }
 
     private void sortNotesByStartTime(List<Note> notes) {
-        notes.sort(Comparator.comparingLong(n -> n.getStartTimeMillis() != null ? n.getStartTimeMillis() : 0));
+        notes.sort((n1, n2) -> {
+            Long t1 = n1.getStartTimeMillis() != null ? n1.getStartTimeMillis() : 0;
+            Long t2 = n2.getStartTimeMillis() != null ? n2.getStartTimeMillis() : 0;
+            return t1.compareTo(t2);
+        });
     }
 
-    private long getStartOfTomorrowMillis() {
+    private long getStartOfDayMillis(long timeMillis) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(timeMillis);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        calendar.add(Calendar.DAY_OF_YEAR, 1);
         return calendar.getTimeInMillis();
     }
 
@@ -168,7 +194,10 @@ public class TomorrowFragment extends Fragment {
     public void onPause() {
         super.onPause();
         stopTimeUpdates();
-        if (isEditing) addEditableNote();
+
+        if (isEditing) {
+            addEditableNote();
+        }
     }
 
     private void startTimeUpdates() {
@@ -176,11 +205,16 @@ public class TomorrowFragment extends Fragment {
             @Override
             public void run() {
                 View rootView = getView();
-                if (rootView != null) updateDateTime(rootView);
+                if (rootView != null) {
+                    updateDateTime(rootView);
+                }
+
                 updateTomorrowNotes();
+
                 timeHandler.postDelayed(this, 60_000);
             }
         };
+
         timeHandler.post(timeRunnable);
     }
 
@@ -196,36 +230,34 @@ public class TomorrowFragment extends Fragment {
         TextView countryTextView = view.findViewById(R.id.country);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        calendar.add(Calendar.DAY_OF_YEAR, 1); // Завтра
         Locale locale = Locale.getDefault();
 
         String dayOfWeek = new SimpleDateFormat("EEEE", locale).format(calendar.getTime());
         int dayNum = Integer.parseInt(new SimpleDateFormat("d", locale).format(calendar.getTime()));
         String ordinalDate = getOrdinalFor(dayNum);
         String month = new SimpleDateFormat("MMMM", locale).format(calendar.getTime());
+
+        // На экране время будет ближайшего события завтра
+        String time;
+        if (tomorrowNotes != null && !tomorrowNotes.isEmpty()) {
+            Note firstNote = tomorrowNotes.get(0);
+            if (firstNote.getStartTimeMillis() != null) {
+                time = new SimpleDateFormat("HH:mm", locale).format(new Date(firstNote.getStartTimeMillis()));
+            } else {
+                time = "--:--";
+            }
+        } else {
+            time = "--:--";
+        }
+
         String country = locale.getDisplayCountry();
 
         dayOfWeekTextView.setText(capitalize(dayOfWeek));
         dateNumberTextView.setText(ordinalDate);
         monthTextView.setText(capitalize(month.toLowerCase()));
+        timeTextView.setText(time);
         countryTextView.setText(country);
-
-        // Показываем ближайшее время события на завтра
-        if (!tomorrowNotes.isEmpty()) {
-            Long earliest = tomorrowNotes.stream()
-                    .filter(n -> n.getStartTimeMillis() != null)
-                    .map(Note::getStartTimeMillis)
-                    .min(Long::compare)
-                    .orElse(null);
-            if (earliest != null) {
-                String earliestTime = new SimpleDateFormat("HH:mm", locale).format(new Date(earliest));
-                timeTextView.setText(earliestTime);
-            } else {
-                timeTextView.setText("--:--");
-            }
-        } else {
-            timeTextView.setText("--:--");
-        }
     }
 
     private String capitalize(String input) {
@@ -234,7 +266,9 @@ public class TomorrowFragment extends Fragment {
     }
 
     private String getOrdinalFor(int number) {
-        if (number % 100 >= 11 && number % 100 <= 13) return number + "th";
+        if (number % 100 >= 11 && number % 100 <= 13) {
+            return number + "th";
+        }
         switch (number % 10) {
             case 1: return number + "st";
             case 2: return number + "nd";

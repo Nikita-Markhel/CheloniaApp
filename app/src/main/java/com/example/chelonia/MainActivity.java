@@ -2,17 +2,20 @@ package com.example.chelonia;
 
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.chelonia.Interfaces.NoteEditable;
 import com.example.chelonia.dialogs.WelcomeDialog;
+import com.example.chelonia.fragments.Calendar.CalendarFragment;
 import com.example.chelonia.fragments.Calendar.TodayFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -35,11 +38,28 @@ public class MainActivity extends AppCompatActivity {
         // FAB
         fab = findViewById(R.id.fabAddNote);
         fab.setOnClickListener(v -> {
-            TodayFragment todayFragment = TodayFragment.getInstance();
-            if (todayFragment != null) {
-                todayFragment.addEditableNote();
+            NavHostFragment navHost =
+                    (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_main_activity);
+            if (navHost == null) return;
+
+            Fragment current = navHost.getChildFragmentManager().getPrimaryNavigationFragment();
+            if (current instanceof CalendarFragment) {
+                CalendarFragment calendarFragment = (CalendarFragment) current;
+                NoteEditable noteEditable = calendarFragment.getActiveNoteEditable();
+                if (noteEditable != null) {
+                    noteEditable.addEditableNote();
+                    return;
+                }
             }
+
+            if (current instanceof NoteEditable) {
+                ((NoteEditable) current).addEditableNote();
+                return;
+            }
+
+            Toast.makeText(this, "Действие недоступно на этом экране", Toast.LENGTH_SHORT).show();
         });
+
 
         NavHostFragment navHost = (NavHostFragment)
                 getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_main_activity);

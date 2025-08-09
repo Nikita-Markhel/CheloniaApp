@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.chelonia.Interfaces.NoteEditable;
 import com.example.chelonia.MainActivity;
 import com.example.chelonia.R;
 import com.example.chelonia.adapters.NoteAdapter;
@@ -26,7 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class TodayFragment extends Fragment {
+public class TodayFragment extends Fragment implements NoteEditable {
 
     private final Handler timeHandler = new Handler(Looper.getMainLooper());
     private Runnable timeRunnable;
@@ -61,6 +62,7 @@ public class TodayFragment extends Fragment {
         return view;
     }
 
+    @Override
     public void addEditableNote() {
         if (isEditing) {
             Note editableNote = todayNotes.get(0);
