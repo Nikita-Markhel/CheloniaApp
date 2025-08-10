@@ -63,4 +63,10 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="add_note">add note</string>
+    <string name="hours_hint">hh</string>
+    <string name="minutes_hint">mm</string>
+    <string name="colon">:</string>
+    <string name="dash">-</string>
+    <string name="description_hint">Description</string>
+    <string name="title_hint">Title</string>
 </resources>

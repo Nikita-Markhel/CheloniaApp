@@ -20,6 +20,7 @@ import com.example.chelonia.adapters.NoteAdapter;
 import com.example.chelonia.database.AppDatabase;
 import com.example.chelonia.database.NoteDao;
 import com.example.chelonia.information.Note;
+import com.example.chelonia.utils.TimeInputHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -42,10 +43,6 @@ public class TodayFragment extends Fragment implements NoteEditable {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = this;
-    }
-
-    public static TodayFragment getInstance() {
-        return instance;
     }
 
     @Override
@@ -76,36 +73,53 @@ public class TodayFragment extends Fragment implements NoteEditable {
 
                 String title = editableHolder.noteTitle.getText().toString().trim();
                 String description = editableHolder.noteDescription.getText().toString().trim();
-                String time = editableHolder.noteTime.getText().toString().trim();
-
                 if (title.isEmpty()) title = "Без названия";
 
                 editableNote.setTitle(title);
                 editableNote.setDescription(description);
 
-                // Устанавливаем startTimeMillis на основе введённого времени или текущего времени
-                if (!time.isEmpty()) {
-                    try {
-                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        Date parsedDate = sdf.parse(time);
-                        if (parsedDate != null) {
-                            Calendar timeCal = Calendar.getInstance();
-                            timeCal.setTime(parsedDate);
+// собираем start и end
+                String startTimeStr = TimeInputHelper.buildTimeFromFields(editableHolder.startHour, editableHolder.startMin);
+                String endTimeStr = TimeInputHelper.buildTimeFromFields(editableHolder.endHour, editableHolder.endMin);
 
-                            Calendar now = Calendar.getInstance();
-                            now.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
-                            now.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
-                            now.set(Calendar.SECOND, 0);
-                            now.set(Calendar.MILLISECOND, 0);
+                try {
+                    Calendar base = Calendar.getInstance();
+                    // если dateMillis задан для заметки — используем его как день
+                    long baseDate = editableNote.getDateMillis() != null ? editableNote.getDateMillis() : getStartOfDayMillis(System.currentTimeMillis());
+                    base.setTimeInMillis(baseDate);
+                    base.set(Calendar.SECOND, 0);
+                    base.set(Calendar.MILLISECOND, 0);
 
-                            editableNote.setStartTimeMillis(now.getTimeInMillis());
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    if (startTimeStr != null) {
+                        String[] sm = startTimeStr.split(":");
+                        int sh = Integer.parseInt(sm[0]);
+                        int smi = Integer.parseInt(sm[1]);
+
+                        Calendar startCal = (Calendar) base.clone();
+                        startCal.set(Calendar.HOUR_OF_DAY, sh);
+                        startCal.set(Calendar.MINUTE, smi);
+                        editableNote.setStartTimeMillis(startCal.getTimeInMillis());
+                    } else {
+                        // если нет ввода времени — ставим текущее время (поведение как раньше)
                         editableNote.setStartTimeMillis(System.currentTimeMillis());
                     }
-                } else {
+
+                    if (endTimeStr != null) {
+                        String[] em = endTimeStr.split(":");
+                        int eh = Integer.parseInt(em[0]);
+                        int emi = Integer.parseInt(em[1]);
+
+                        Calendar endCal = (Calendar) base.clone();
+                        endCal.set(Calendar.HOUR_OF_DAY, eh);
+                        endCal.set(Calendar.MINUTE, emi);
+                        editableNote.setEndTimeMillis(endCal.getTimeInMillis());
+                    } else {
+                        editableNote.setEndTimeMillis(null);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                     editableNote.setStartTimeMillis(System.currentTimeMillis());
+                    editableNote.setEndTimeMillis(null);
                 }
 
                 editableNote.setEditable(false);

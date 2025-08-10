@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chelonia.R;
 import com.example.chelonia.information.Note;
+import com.example.chelonia.utils.TimeInputHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,7 +20,7 @@ import java.util.Locale;
 
 public class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private List<Note> noteList;
+    private final List<Note> noteList;
 
     private static final int TYPE_NORMAL = 0;
     private static final int TYPE_EDITABLE = 1;
@@ -70,6 +71,27 @@ public class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             EditableNoteViewHolder viewHolder = (EditableNoteViewHolder) holder;
             viewHolder.noteTitle.setText(note.getTitle());
             viewHolder.noteDescription.setText(note.getDescription());
+
+            // fill time fields if note has times
+            if (note.getStartTimeMillis() != null) {
+                java.util.Calendar c = java.util.Calendar.getInstance();
+                c.setTimeInMillis(note.getStartTimeMillis());
+                viewHolder.startHour.setText(String.format(Locale.getDefault(), "%02d", c.get(java.util.Calendar.HOUR_OF_DAY)));
+                viewHolder.startMin.setText(String.format(Locale.getDefault(), "%02d", c.get(java.util.Calendar.MINUTE)));
+            } else {
+                viewHolder.startHour.setText("");
+                viewHolder.startMin.setText("");
+            }
+
+            if (note.getEndTimeMillis() != null) {
+                java.util.Calendar c2 = java.util.Calendar.getInstance();
+                c2.setTimeInMillis(note.getEndTimeMillis());
+                viewHolder.endHour.setText(String.format(Locale.getDefault(), "%02d", c2.get(java.util.Calendar.HOUR_OF_DAY)));
+                viewHolder.endMin.setText(String.format(Locale.getDefault(), "%02d", c2.get(java.util.Calendar.MINUTE)));
+            } else {
+                viewHolder.endHour.setText("");
+                viewHolder.endMin.setText("");
+            }
         }
     }
 
@@ -79,7 +101,7 @@ public class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public void addNote(Note note) {
-        noteList.add(0, note); // Добавляем в начало списка
+        noteList.add(0, note);
         notifyItemInserted(0);
     }
 
@@ -99,14 +121,31 @@ public class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static class EditableNoteViewHolder extends RecyclerView.ViewHolder {
         public EditText noteTitle;
         public EditText noteDescription;
-        public EditText noteTime;
+        // new splitted time fields
+        public EditText startHour, startMin, endHour, endMin;
 
         public EditableNoteViewHolder(View itemView) {
             super(itemView);
             noteTitle = itemView.findViewById(R.id.note_title_edit);
             noteDescription = itemView.findViewById(R.id.description_edit);
-            noteTime = itemView.findViewById(R.id.note_time_edit);
+
+            startHour = itemView.findViewById(R.id.start_hour);
+            startMin = itemView.findViewById(R.id.start_min);
+            endHour = itemView.findViewById(R.id.end_hour);
+            endMin = itemView.findViewById(R.id.end_min);
+
+            // TextWatchers that auto-advance and clamp
+            startHour.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(startHour, startMin, true, true));
+            startMin.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(startMin, endHour, false, false)); // не прыгаем
+            endHour.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(endHour, endMin, true, true));
+            endMin.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(endMin, null, false, false));
+
+
+            // On focus lost, format values (pad and clamp)
+            TimeInputHelper.attachFocusFormatter(startHour, true);
+            TimeInputHelper.attachFocusFormatter(startMin, false);
+            TimeInputHelper.attachFocusFormatter(endHour, true);
+            TimeInputHelper.attachFocusFormatter(endMin, false);
         }
     }
-
 }

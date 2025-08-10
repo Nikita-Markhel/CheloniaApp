@@ -170,6 +170,7 @@
         android:layout_marginHorizontal="5dp"
         android:clipToPadding="false"
         android:paddingBottom="450sp"
+        android:paddingTop="15dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toBottomOf="@+id/dateAndTimeLayout"/>
 

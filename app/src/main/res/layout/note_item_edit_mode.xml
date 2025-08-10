@@ -5,48 +5,137 @@
     android:layout_height="wrap_content"
     android:background="@drawable/note_background"
     android:padding="7dp"
-    android:layout_marginBottom="10dp">
+    android:layout_marginBottom="20sp">
 
-    <EditText
-        android:id="@+id/note_time_edit"
-        android:background="@drawable/note_time_bg"
-        android:inputType="time"
-        android:paddingVertical="8dp"
-        android:paddingHorizontal="3dp"
+    <!-- Time group -->
+    <LinearLayout
+        android:id="@+id/time_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/slate"
-        android:textSize="12sp"
-        android:hint="@string/default_time"
-        android:autofillHints="@string/default_time"
+        android:layout_marginHorizontal="2dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent">
 
+        <EditText
+            android:id="@+id/start_hour"
+            android:layout_width="25dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:digits="0123456789"
+            android:ems="2"
+            android:gravity="center"
+            android:hint="@string/hours_hint"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:maxLength="2"
+            android:padding="0dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/colon1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/colon"
+            android:layout_marginStart="-4sp"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/start_min"
+            android:layout_width="28sp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:digits="0123456789"
+            android:ems="2"
+            android:gravity="center"
+            android:hint="@string/minutes_hint"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:maxLength="2"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/dash"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dash"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/end_hour"
+            android:layout_width="25dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:digits="0123456789"
+            android:ems="2"
+            android:gravity="center"
+            android:layout_marginStart="-4sp"
+            android:hint="@string/hours_hint"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:maxLength="2"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/colon2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/colon"
+            android:layout_marginStart="-4sp"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/end_min"
+            android:layout_width="28sp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:digits="0123456789"
+            android:ems="2"
+            android:gravity="center"
+            android:hint="@string/minutes_hint"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:maxLength="2"
+            android:padding="0dp"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+
+    <!-- Title -->
     <EditText
         android:id="@+id/note_title_edit"
-        android:layout_width="wrap_content"
-        android:maxWidth="80sp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:ellipsize="end"
+        android:background="@android:color/transparent"
         android:fontFamily="sans-serif"
-        android:hint="@string/default_note_title"
+        android:hint="@string/title_hint"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:maxWidth="80sp"
+        android:maxLines="2"
+        android:paddingStart="8dp"
         android:textColor="@color/black"
         android:textSize="12sp"
-        android:maxLines="2"
-        android:ellipsize="end"
-        android:singleLine="false"
-        android:layout_marginStart="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/note_time_edit"
+        app:layout_constraintStart_toEndOf="@id/time_group"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Description -->
     <EditText
         android:id="@+id/description_edit"
-        android:layout_width="wrap_content"
+        android:layout_width="130sp"
         android:layout_height="wrap_content"
+        android:hint="@string/description_hint"
+        android:importantForAutofill="no"
+        android:background="@android:color/transparent"
+        android:inputType="text"
         android:maxWidth="190sp"
         android:textSize="12sp"
-        android:hint="@string/default_note_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

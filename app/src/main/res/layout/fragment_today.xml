@@ -166,9 +166,9 @@
         android:id="@+id/notesRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
         android:layout_marginHorizontal="5dp"
         android:clipToPadding="false"
+        android:paddingTop="15dp"
         android:paddingBottom="450sp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toBottomOf="@+id/dateAndTimeLayout"/>

@@ -16,7 +16,6 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.chelonia.Interfaces.NoteEditable;
 import com.example.chelonia.dialogs.WelcomeDialog;
 import com.example.chelonia.fragments.Calendar.CalendarFragment;
-import com.example.chelonia.fragments.Calendar.TodayFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 

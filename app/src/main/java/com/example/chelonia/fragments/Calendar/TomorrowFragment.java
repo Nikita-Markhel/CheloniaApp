@@ -21,6 +21,7 @@ import com.example.chelonia.adapters.NoteAdapter;
 import com.example.chelonia.database.AppDatabase;
 import com.example.chelonia.database.NoteDao;
 import com.example.chelonia.information.Note;
+import com.example.chelonia.utils.TimeInputHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -77,36 +78,50 @@ public class TomorrowFragment extends Fragment implements NoteEditable {
 
                 String title = editableHolder.noteTitle.getText().toString().trim();
                 String description = editableHolder.noteDescription.getText().toString().trim();
-                String time = editableHolder.noteTime.getText().toString().trim();
-
                 if (title.isEmpty()) title = "Без названия";
 
                 editableNote.setTitle(title);
                 editableNote.setDescription(description);
 
-                if (!time.isEmpty()) {
-                    try {
-                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        Date parsedDate = sdf.parse(time);
-                        if (parsedDate != null) {
-                            Calendar timeCal = Calendar.getInstance();
-                            timeCal.setTime(parsedDate);
+                String startTimeStr = TimeInputHelper.buildTimeFromFields(editableHolder.startHour, editableHolder.startMin);
+                String endTimeStr = TimeInputHelper.buildTimeFromFields(editableHolder.endHour, editableHolder.endMin);
 
-                            Calendar tomorrow = Calendar.getInstance();
-                            tomorrow.add(Calendar.DAY_OF_YEAR, 1); // Завтра
-                            tomorrow.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
-                            tomorrow.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
-                            tomorrow.set(Calendar.SECOND, 0);
-                            tomorrow.set(Calendar.MILLISECOND, 0);
+                try {
+                    Calendar base = Calendar.getInstance();
+                    long baseDate = getStartOfDayMillis(System.currentTimeMillis() + 86400000L);
+                    base.setTimeInMillis(baseDate);
+                    base.set(Calendar.SECOND, 0);
+                    base.set(Calendar.MILLISECOND, 0);
 
-                            editableNote.setStartTimeMillis(tomorrow.getTimeInMillis());
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    if (startTimeStr != null) {
+                        String[] sm = startTimeStr.split(":");
+                        int sh = Integer.parseInt(sm[0]);
+                        int smi = Integer.parseInt(sm[1]);
+
+                        Calendar startCal = (Calendar) base.clone();
+                        startCal.set(Calendar.HOUR_OF_DAY, sh);
+                        startCal.set(Calendar.MINUTE, smi);
+                        editableNote.setStartTimeMillis(startCal.getTimeInMillis());
+                    } else {
                         editableNote.setStartTimeMillis(System.currentTimeMillis() + 86400000L);
                     }
-                } else {
+
+                    if (endTimeStr != null) {
+                        String[] em = endTimeStr.split(":");
+                        int eh = Integer.parseInt(em[0]);
+                        int emi = Integer.parseInt(em[1]);
+
+                        Calendar endCal = (Calendar) base.clone();
+                        endCal.set(Calendar.HOUR_OF_DAY, eh);
+                        endCal.set(Calendar.MINUTE, emi);
+                        editableNote.setEndTimeMillis(endCal.getTimeInMillis());
+                    } else {
+                        editableNote.setEndTimeMillis(null);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                     editableNote.setStartTimeMillis(System.currentTimeMillis() + 86400000L);
+                    editableNote.setEndTimeMillis(null);
                 }
 
                 editableNote.setEditable(false);
@@ -118,10 +133,7 @@ public class TomorrowFragment extends Fragment implements NoteEditable {
                 noteAdapter.notifyDataSetChanged();
 
                 isEditing = false;
-                Activity a = getActivity();
-                if (a instanceof MainActivity) {
-                    ((MainActivity) a).updateFabStyle(false); // или false
-                }
+                updateFabStyle(false);
             }
 
         } else {
@@ -135,12 +147,10 @@ public class TomorrowFragment extends Fragment implements NoteEditable {
             noteAdapter.notifyItemInserted(0);
 
             isEditing = true;
-            Activity a = getActivity();
-            if (a instanceof MainActivity) {
-                ((MainActivity) a).updateFabStyle(true); // или false
-            }
+            updateFabStyle(true);
         }
     }
+
 
     private List<Note> getTomorrowNotes() {
         AppDatabase db = AppDatabase.getInstance(requireContext());
