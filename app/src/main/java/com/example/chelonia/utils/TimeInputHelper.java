@@ -1,5 +1,7 @@
 package com.example.chelonia.utils;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -12,9 +14,10 @@ public class TimeInputHelper {
      * Автопереход в next при достижении 2 символов.
      * При потере фокуса — дополняет нулём и корректирует диапазон.
      *
-     * @param current поле, к которому привязан watcher
-     * @param next    следующее поле (может быть null)
-     * @param isHour  true если поле часов (0-23), false если минуты (0-59)
+     * @param current    поле, к которому привязан watcher
+     * @param next       следующее поле (может быть null)
+     * @param isHour     true если поле часов (0-23), false если минуты (0-59)
+     * @param autoFocusNext true, если нужно переключаться на следующее поле при вводе 2 символов
      */
     public static TextWatcher getTwoDigitWatcher(
             final EditText current,
@@ -39,6 +42,7 @@ public class TimeInputHelper {
                 String digits = s.toString().replaceAll("[^0-9]", "");
                 if (digits.length() > 2) digits = digits.substring(0, 2);
 
+                // Парсим и ограничиваем диапазон, если есть 2 символа
                 if (digits.length() == 2) {
                     int val = Integer.parseInt(digits);
                     if (isHour) {
@@ -49,15 +53,22 @@ public class TimeInputHelper {
                     digits = pad2(val);
                 }
 
+                // Обновляем поле только если изменился текст
                 if (!digits.equals(s.toString())) {
                     current.setText(digits);
                 }
+
+                // Устанавливаем курсор в конец
                 current.setSelection(digits.length());
 
-                // теперь проверка на авто-переход
+                // Авто-переход на следующее поле
                 if (autoFocusNext && digits.length() == 2 && next != null) {
-                    next.requestFocus();
-                    next.setSelection(next.getText().length());
+                    // Используем post, чтобы избежать конфликтов с текущим событием ввода
+                    next.post(() -> {
+                        next.requestFocus();
+                        int len = next.getText() != null ? next.getText().length() : 0;
+                        next.setSelection(len);
+                    });
                 }
 
                 isEditing = false;
@@ -65,38 +76,43 @@ public class TimeInputHelper {
         };
     }
 
-
     /**
      * Устанавливаем поведение при потере фокуса: дозаполняем нулями и ограничиваем диапазон.
      */
     public static void attachFocusFormatter(final EditText et, final boolean isHour) {
-        et.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    String raw = et.getText().toString().replaceAll("[^0-9]", "");
-                    if (raw.isEmpty()) {
-                        // если часы — 00, минуты — 00
+        et.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                String raw = et.getText().toString().replaceAll("[^0-9]", "");
+                if (raw.isEmpty()) {
+                    // если часы — 00, минуты — 00
+                    if (!"00".equals(et.getText().toString())) {
                         et.setText("00");
-                        return;
                     }
-                    int val = Integer.parseInt(raw);
-                    if (isHour) {
-                        if (val < 0) val = 0;
-                        if (val > 23) val = 23;
-                    } else {
-                        if (val < 0) val = 0;
-                        if (val > 59) val = 59;
-                    }
-                    et.setText(pad2(val));
+                    return;
+                }
+                int val;
+                try {
+                    val = Integer.parseInt(raw);
+                } catch (NumberFormatException e) {
+                    val = 0;
+                }
+                if (isHour) {
+                    if (val < 0) val = 0;
+                    if (val > 23) val = 23;
+                } else {
+                    if (val < 0) val = 0;
+                    if (val > 59) val = 59;
+                }
+                String padded = pad2(val);
+                if (!padded.equals(et.getText().toString())) {
+                    et.setText(padded);
                 }
             }
         });
     }
 
     private static String pad2(int v) {
-        if (v < 10) return "0" + v;
-        return String.valueOf(v);
+        return (v < 10 ? "0" : "") + v;
     }
 
     /**
@@ -120,5 +136,4 @@ public class TimeInputHelper {
 
         return pad2(hh) + ":" + pad2(mm);
     }
-
 }

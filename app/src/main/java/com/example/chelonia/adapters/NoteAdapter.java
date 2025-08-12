@@ -121,7 +121,6 @@ public class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static class EditableNoteViewHolder extends RecyclerView.ViewHolder {
         public EditText noteTitle;
         public EditText noteDescription;
-        // new splitted time fields
         public EditText startHour, startMin, endHour, endMin;
 
         public EditableNoteViewHolder(View itemView) {

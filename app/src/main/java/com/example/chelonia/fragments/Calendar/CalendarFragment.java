@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.example.chelonia.Interfaces.FabActionProvider;
 import com.example.chelonia.Interfaces.NoteEditable;
 import com.example.chelonia.R;
 import com.example.chelonia.adapters.TabsPagerAdapter;
@@ -31,21 +32,27 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class CalendarFragment extends Fragment {
+public class CalendarFragment extends Fragment implements FabActionProvider {
 
     private TabsPagerAdapter adapter;
     private ViewPager2 viewPager;
     private static final String ACTION_REGISTRATION_COMPLETE = "com.example.chelonia.REGISTRATION_COMPLETE";
+
+    private TextView primaryWelcomeMessage;
+    private TextView secondaryWelcomeMessage;
+    private ImageView avatarImageView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_calendar, container, false);
     }
 
-    private TextView primaryWelcomeMessage;
-    private TextView secondaryWelcomeMessage;
-    private ImageView avatarImageView;
-
+    private final BroadcastReceiver registrationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateUserData();
+        }
+    };
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -63,7 +70,6 @@ public class CalendarFragment extends Fragment {
         );
 
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
-        // Используем поля класса, убираем тип (var)
         viewPager = view.findViewById(R.id.viewPager);
 
         adapter = new TabsPagerAdapter(requireActivity());
@@ -97,6 +103,9 @@ public class CalendarFragment extends Fragment {
                     }
                     customView.setSelected(true);
                 }
+                if (getActivity() instanceof com.example.chelonia.MainActivity) {
+                    ((com.example.chelonia.MainActivity) getActivity()).refreshFabAppearance();
+                }
             }
 
             @Override
@@ -116,6 +125,16 @@ public class CalendarFragment extends Fragment {
                 onTabSelected(tab);
             }
         });
+
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                if (getActivity() instanceof com.example.chelonia.MainActivity) {
+                    ((com.example.chelonia.MainActivity) getActivity()).refreshFabAppearance();
+                }
+            }
+        });
     }
 
     @Nullable
@@ -131,22 +150,55 @@ public class CalendarFragment extends Fragment {
         return null;
     }
 
+    @Override
+    public boolean onFabClick() {
+        NoteEditable active = getActiveNoteEditable();
+        if (active != null) {
+            active.addEditableNote();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int getFabIconRes() {
+        if (viewPager == null || adapter == null) return -1;
+        Fragment f = adapter.getFragmentIfExists(viewPager.getCurrentItem());
+        if (f instanceof FabActionProvider) {
+            return ((FabActionProvider) f).getFabIconRes();
+        }
+        return -1;
+    }
+
+    @Override
+    public int getFabTintColorRes() {
+        if (viewPager == null || adapter == null) return -1;
+        Fragment f = adapter.getFragmentIfExists(viewPager.getCurrentItem());
+        if (f instanceof FabActionProvider) {
+            return ((FabActionProvider) f).getFabTintColorRes();
+        }
+        return -1;
+    }
+
+    @Override
+    public boolean isFabVisible() {
+        if (viewPager == null || adapter == null) return true;
+        Fragment f = adapter.getFragmentIfExists(viewPager.getCurrentItem());
+        if (f instanceof FabActionProvider) {
+            return ((FabActionProvider) f).isFabVisible();
+        }
+        return true;
+    }
 
     @Override
     public void onDestroyView() {
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(registrationReceiver);
         super.onDestroyView();
+        try {
+            LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(registrationReceiver);
+        } catch (Exception ignored) {}
     }
 
-    private final BroadcastReceiver registrationReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            updateUserData();
-        }
-    };
-
-    public void updateUserData() {
-
+    private void updateUserData() {
         SharedPreferences prefs = requireActivity().getSharedPreferences("user_data", Context.MODE_PRIVATE);
         String userFirstName = prefs.getString("firstName", getString(R.string.unknown_first_name));
         String avatarUriString = prefs.getString("avatarUri", "");
