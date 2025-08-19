@@ -1,5 +1,5 @@
 [versions]
-agp = "8.12.0"
+agp = "8.12.1"
 androidxActivity = "1.6.1"
 blurry = "3.0.0"
 fragment = "1.8.6"
@@ -10,6 +10,7 @@ appcompat = "1.6.1"
 material = "1.10.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
+materialCalendarview = "2.0.1"
 materialVersion = "1.9.0"
 navigationFragment = "2.8.9"
 navigationUi = "2.8.9"
@@ -28,6 +29,7 @@ appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "a
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+material-calendarview = { module = "com.prolificinteractive:material-calendarview", version.ref = "materialCalendarview" }
 material-v190 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }

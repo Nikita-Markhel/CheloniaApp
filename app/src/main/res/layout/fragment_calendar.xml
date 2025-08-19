@@ -3,91 +3,104 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     tools:context=".fragments.Calendar.CalendarFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayoutHead"
-        android:paddingHorizontal="10dp"
-        android:paddingTop="35sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingHorizontal="10dp"
+        android:paddingTop="35sp"
+        android:background="@color/almond"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="@color/almond">
+        app:layout_constraintTop_toTopOf="parent">
 
+        <!-- Контейнер для текста + картинки -->
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="200dp"
+            android:id="@+id/headerContent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/welcome_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/inter"
-                android:text="@string/good_morning_msg"
-                android:textColor="@color/slate50"
-                android:textSize="16sp"
-                android:drawablePadding="0dp"
-                android:gravity="center"
-                app:drawableEndCompat="@drawable/ic_sun"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-
-            <TextView
-                android:id="@+id/welcome_message2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/good_morning_msg2"
-                android:textColor="@color/slate50"
-                android:fontFamily="@font/inter"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/welcome_message" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/imageView"
-            android:layout_width="55sp"
-            android:layout_height="55sp"
-            android:layout_marginEnd="5dp"
-            android:contentDescription="@string/user_image"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_launcher_foreground"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:orientation="horizontal"
             app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/CircularImageView" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Блок с текстами -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/textBlock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/imageView"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/welcome_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter"
+                    android:gravity="center"
+                    android:text="@string/good_morning_msg"
+                    android:textColor="@color/slate50"
+                    android:textSize="16sp"
+                    app:drawableEndCompat="@drawable/ic_sun"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/welcome_message2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter"
+                    android:text="@string/good_morning_msg2"
+                    android:textColor="@color/slate50"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/welcome_message" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Картинка теперь тоже внутри headerContent -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imageView"
+                android:layout_width="55sp"
+                android:layout_height="55sp"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/user_image"
+                android:src="@drawable/ic_launcher_foreground"
+                app:shapeAppearanceOverlay="@style/CircularImageView"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+
+    <!-- Хэдер с табами -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/constraintLayoutHead"
-        android:background="@color/olive">
+        android:background="@color/olive"
+        app:layout_constraintTop_toBottomOf="@id/constraintLayoutHead">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/tabHotBar"
             android:layout_width="match_parent"
-            android:layout_marginTop="15sp"
             android:layout_height="50sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="15sp"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintEnd_toEndOf="parent">
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayout"
@@ -95,20 +108,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/transparent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:tabMode="fixed" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- ViewPager -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/header_layout" />
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_layout"
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteX="-187dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

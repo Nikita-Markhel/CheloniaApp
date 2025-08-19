@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Fox project"
+rootProject.name = "Chelonia"
 include(":app")
  

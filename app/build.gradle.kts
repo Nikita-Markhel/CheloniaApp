@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace = "com.example.chelonia"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.chelonia"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0-beta.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

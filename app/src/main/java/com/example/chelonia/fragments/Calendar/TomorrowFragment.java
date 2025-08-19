@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 
 import com.example.chelonia.R;
@@ -30,6 +31,7 @@ public class TomorrowFragment extends BaseNoteFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tomorrow, container, false);
+        // Recycler + scrollListener инициализируются в BaseNoteFragment
         setupRecycler(view);
         return view;
     }
@@ -48,7 +50,9 @@ public class TomorrowFragment extends BaseNoteFragment {
 
     @Override
     protected long getBaseDateMillisForSaving(Note editableNote) {
-        return editableNote.getDateMillis() != null ? editableNote.getDateMillis() : getStartOfDayMillis(System.currentTimeMillis() + 86400000L);
+        return editableNote.getDateMillis() != null
+                ? editableNote.getDateMillis()
+                : getStartOfDayMillis(System.currentTimeMillis() + 86400000L);
     }
 
     @Override
@@ -136,9 +140,7 @@ public class TomorrowFragment extends BaseNoteFragment {
     }
 
     private String getOrdinalFor(int number) {
-        if (number % 100 >= 11 && number % 100 <= 13) {
-            return number + "th";
-        }
+        if (number % 100 >= 11 && number % 100 <= 13) return number + "th";
         switch (number % 10) {
             case 1: return number + "st";
             case 2: return number + "nd";

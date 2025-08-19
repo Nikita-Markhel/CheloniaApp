@@ -69,4 +69,5 @@
     <string name="dash">-</string>
     <string name="description_hint">Description</string>
     <string name="title_hint">Title</string>
+    <string name="wallet_fragment_title">Spending &amp; Budgets</string>
 </resources>

@@ -1,12 +1,15 @@
 package com.example.chelonia.fragments.Calendar;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CalendarView;
 
 import androidx.annotation.NonNull;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.chelonia.R;
 import com.example.chelonia.database.AppDatabase;
@@ -26,13 +29,14 @@ public class MonthFragment extends BaseNoteFragment {
         super.onCreate(savedInstanceState);
         instance = this;
         selectedDateMillis = getStartOfDayMillis(System.currentTimeMillis());
+
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_month, container, false);
-        setupRecycler(view);
+        setupRecycler(view); // scrollListener подключается автоматически
 
         CalendarView calendarView = view.findViewById(R.id.calendarView);
         calendarView.setOnDateChangeListener((v, year, month, dayOfMonth) -> {
@@ -45,6 +49,13 @@ public class MonthFragment extends BaseNoteFragment {
         });
 
         return view;
+    }
+
+
+    private void sendHeaderToggle(boolean hide) {
+        Intent intent = new Intent(CalendarFragment.ACTION_HEADER_TOGGLE);
+        intent.putExtra(CalendarFragment.EXTRA_HEADER_HIDE, hide);
+        LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(intent);
     }
 
     @Override
@@ -104,5 +115,10 @@ public class MonthFragment extends BaseNoteFragment {
 
     private void stopAutoUpdate() {
         timeHandler.removeCallbacks(timeRunnable);
+    }
+
+    private int dpToPx(int dp) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        return Math.round(dp * metrics.density);
     }
 }

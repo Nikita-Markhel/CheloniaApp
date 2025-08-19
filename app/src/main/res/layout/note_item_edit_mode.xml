@@ -100,6 +100,7 @@
             android:importantForAutofill="no"
             android:inputType="number"
             android:textIsSelectable="false"
+            android:imeOptions="actionNext"
             android:textSize="16sp" />
 
     </LinearLayout>
@@ -107,7 +108,7 @@
     <!-- Title -->
     <EditText
         android:id="@+id/note_title_edit"
-        android:layout_width="0dp"
+        android:layout_width="60sp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:background="@android:color/transparent"
@@ -121,6 +122,7 @@
         android:paddingStart="8dp"
         android:textColor="@color/black"
         android:textSize="14sp"
+        android:imeOptions="actionNext"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/time_group"
         app:layout_constraintTop_toTopOf="parent" />
@@ -136,6 +138,7 @@
         android:inputType="text"
         android:maxWidth="190sp"
         android:textSize="14sp"
+        android:imeOptions="actionDone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

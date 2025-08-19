@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -34,13 +35,25 @@ import java.util.Locale;
 
 public class CalendarFragment extends Fragment implements FabActionProvider {
 
+    public static final String ACTION_REGISTRATION_COMPLETE = "com.example.chelonia.REGISTRATION_COMPLETE";
+    public static final String ACTION_HEADER_TOGGLE = "com.example.chelonia.ACTION_HEADER_TOGGLE";
+    public static final String EXTRA_HEADER_HIDE = "extra_header_hide";
+
     private TabsPagerAdapter adapter;
     private ViewPager2 viewPager;
-    private static final String ACTION_REGISTRATION_COMPLETE = "com.example.chelonia.REGISTRATION_COMPLETE";
 
     private TextView primaryWelcomeMessage;
     private TextView secondaryWelcomeMessage;
     private ImageView avatarImageView;
+
+    // views to animate
+    private View headView;
+    private View headerLayoutView;
+    private int headerPeekPx = 0;
+    private View headerContent;
+
+    private boolean headerHidden = false;
+    private int headHeight = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -54,6 +67,17 @@ public class CalendarFragment extends Fragment implements FabActionProvider {
         }
     };
 
+    private final BroadcastReceiver headerReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null || !ACTION_HEADER_TOGGLE.equals(intent.getAction())) return;
+            boolean hide = intent.getBooleanExtra(EXTRA_HEADER_HIDE, false);
+            // avoid duplicate requests
+            if (hide == headerHidden) return;
+            animateHeader(hide, true);
+        }
+    };
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -62,11 +86,25 @@ public class CalendarFragment extends Fragment implements FabActionProvider {
         secondaryWelcomeMessage = view.findViewById(R.id.welcome_message2);
         avatarImageView = view.findViewById(R.id.imageView);
 
+        headView = view.findViewById(R.id.constraintLayoutHead);
+        headerLayoutView = view.findViewById(R.id.header_layout);
+        headView = view.findViewById(R.id.constraintLayoutHead); // фон
+        headerContent = view.findViewById(R.id.headerContent);
+
+        headerPeekPx = dpToPx();
+        headView.post(() -> headHeight = headView.getHeight());
+
         updateUserData();
 
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
                 registrationReceiver,
                 new IntentFilter(ACTION_REGISTRATION_COMPLETE)
+        );
+
+        // listen for header toggle requests from children
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+                headerReceiver,
+                new IntentFilter(ACTION_HEADER_TOGGLE)
         );
 
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
@@ -191,10 +229,22 @@ public class CalendarFragment extends Fragment implements FabActionProvider {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        // improve keyboard behaviour: allow resize (helps when editing notes)
+        try {
+            requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        } catch (Exception ignored) { }
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         try {
             LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(registrationReceiver);
+        } catch (Exception ignored) {}
+        try {
+            LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(headerReceiver);
         } catch (Exception ignored) {}
     }
 
@@ -242,4 +292,45 @@ public class CalendarFragment extends Fragment implements FabActionProvider {
             avatarImageView.setImageResource(R.drawable.ic_launcher_foreground);
         }
     }
+
+    /**
+     * Анимированно скрывает/показывает шапку (constraintLayoutHead + header_layout + viewPager)
+     * @param hide true = поднять шапку вверх (скрыть), false = опустить (показать)
+     * @param animate true = анимировать
+     */
+
+    private void animateHeader(boolean hide, boolean animate) {
+        if (headView == null || headerLayoutView == null || viewPager == null) return;
+
+        if (headHeight <= 0) {
+            headView.post(() -> {
+                headHeight = headView.getHeight();
+                animateHeader(hide, animate);
+            });
+            return;
+        }
+
+        int clampPeek = Math.min(headerPeekPx, headHeight);
+        float targetY = hide ? -(headHeight - clampPeek) : 0f;
+        long duration = animate ? 220L : 0L;
+
+        // фон остаётся всегда, только двигается
+        headView.animate().translationY(targetY).setDuration(duration).start();
+        headerLayoutView.animate().translationY(targetY).setDuration(duration).start();
+        viewPager.animate().translationY(targetY).setDuration(duration).start();
+
+        // исчезают только надписи
+        if (headerContent != null) {
+            float targetAlpha = hide ? 0f : 1f;
+            headerContent.animate().alpha(targetAlpha).setDuration(duration).start();
+        }
+
+        headerHidden = hide;
+    }
+
+    private int dpToPx() {
+        float d = getResources().getDisplayMetrics().density;
+        return Math.round(17 * d);
+    }
+
 }

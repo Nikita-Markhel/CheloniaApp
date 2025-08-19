@@ -129,22 +129,36 @@ public class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             noteDescription = itemView.findViewById(R.id.description_edit);
 
             startHour = itemView.findViewById(R.id.start_hour);
-            startMin = itemView.findViewById(R.id.start_min);
-            endHour = itemView.findViewById(R.id.end_hour);
-            endMin = itemView.findViewById(R.id.end_min);
+            startMin  = itemView.findViewById(R.id.start_min);
+            endHour   = itemView.findViewById(R.id.end_hour);
+            endMin    = itemView.findViewById(R.id.end_min);
 
-            // TextWatchers that auto-advance and clamp
-            startHour.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(startHour, startMin, true, true));
-            startMin.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(startMin, endHour, false, false)); // не прыгаем
-            endHour.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(endHour, endMin, true, true));
-            endMin.addTextChangedListener(TimeInputHelper.getTwoDigitWatcher(endMin, null, false, false));
+            // --- Первое нажатие всегда на startHour
+            TimeInputHelper.redirectFirstClick(startHour, startMin, endHour, endMin);
 
+            // --- Watchers без автонулей
+            startHour.addTextChangedListener(TimeInputHelper.getSimpleWatcher(startHour, startMin, true));
+            startMin.addTextChangedListener(TimeInputHelper.getSimpleWatcher(startMin, endHour, true));
+            endHour.addTextChangedListener(TimeInputHelper.getSimpleWatcher(endHour, endMin, true));
+            // ⬇️ теперь endMin переводим фокус на title
+            endMin.addTextChangedListener(TimeInputHelper.getSimpleWatcher(endMin, noteTitle, true));
 
-            // On focus lost, format values (pad and clamp)
-            TimeInputHelper.attachFocusFormatter(startHour, true);
-            TimeInputHelper.attachFocusFormatter(startMin, false);
-            TimeInputHelper.attachFocusFormatter(endHour, true);
-            TimeInputHelper.attachFocusFormatter(endMin, false);
+            // --- Backspace переход
+            TimeInputHelper.attachBackspaceHandler(startMin, startHour);
+            TimeInputHelper.attachBackspaceHandler(endHour, startMin);
+            TimeInputHelper.attachBackspaceHandler(endMin, endHour);
+
+            // --- Из title по Enter → в description
+            noteTitle.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_NEXT) {
+                    noteDescription.requestFocus();
+                    noteDescription.setSelection(
+                            noteDescription.getText() != null ? noteDescription.getText().length() : 0
+                    );
+                    return true;
+                }
+                return false;
+            });
         }
     }
 }

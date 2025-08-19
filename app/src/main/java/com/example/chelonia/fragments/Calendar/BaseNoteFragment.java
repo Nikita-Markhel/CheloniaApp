@@ -1,10 +1,12 @@
 package com.example.chelonia.fragments.Calendar;
 
-import android.os.Handler;
-import android.os.Looper;
+import android.content.Intent;
+import android.util.DisplayMetrics;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -14,6 +16,7 @@ import com.example.chelonia.MainActivity;
 import com.example.chelonia.adapters.NoteAdapter;
 import com.example.chelonia.database.AppDatabase;
 import com.example.chelonia.information.Note;
+import com.example.chelonia.utils.TimeInputHelper;
 
 import java.util.Calendar;
 import java.util.List;
@@ -24,8 +27,12 @@ public abstract class BaseNoteFragment extends Fragment implements NoteEditable,
     protected RecyclerView recyclerView;
     protected boolean isEditing = false;
 
-    protected final Handler timeHandler = new Handler(Looper.getMainLooper());
+    protected final android.os.Handler timeHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     protected Runnable timeRunnable;
+
+    // --- новые поля для скрытия шапки ---
+    private int scrollAcc = 0;
+    private int scrollThresholdPx;
 
     protected void setupRecycler(View rootView) {
         recyclerView = rootView.findViewById(com.example.chelonia.R.id.notesRecyclerView);
@@ -33,6 +40,58 @@ public abstract class BaseNoteFragment extends Fragment implements NoteEditable,
         notes = loadNotes();
         noteAdapter = new NoteAdapter(notes);
         recyclerView.setAdapter(noteAdapter);
+
+        // инициализируем порог и слушатель
+        scrollThresholdPx = dpToPx(80);
+        attachHeaderHideOnScroll();
+    }
+
+    private void attachHeaderHideOnScroll() {
+        if (recyclerView == null) return;
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                super.onScrolled(rv, dx, dy);
+                if (dy == 0) return;
+
+                if (dy > 0) {
+                    // Скролл вниз → накапливаем
+                    scrollAcc += dy;
+                    if (scrollAcc > scrollThresholdPx) {
+                        sendHeaderToggle(true); // скрыть
+                        scrollAcc = 0;
+                    }
+                } else {
+                    // Скролл вверх → проверяем, на сколько близко к началу списка
+                    LinearLayoutManager lm = (LinearLayoutManager) rv.getLayoutManager();
+                    if (lm != null && lm.findFirstCompletelyVisibleItemPosition() == 0) {
+                        // Только если вернулись в самый верх → показать
+                        sendHeaderToggle(false);
+                    }
+                }
+            }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
+                super.onScrollStateChanged(rv, newState);
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    scrollAcc = 0;
+                }
+            }
+        });
+    }
+
+
+    private void sendHeaderToggle(boolean hide) {
+        Intent intent = new Intent(CalendarFragment.ACTION_HEADER_TOGGLE);
+        intent.putExtra(CalendarFragment.EXTRA_HEADER_HIDE, hide);
+        LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(intent);
+    }
+
+    private int dpToPx(int dp) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        return Math.round(dp * metrics.density);
     }
 
     /**
@@ -90,8 +149,9 @@ public abstract class BaseNoteFragment extends Fragment implements NoteEditable,
                 editableNote.setTitle(title);
                 editableNote.setDescription(description);
 
-                String startTimeStr = com.example.chelonia.utils.TimeInputHelper.buildTimeFromFields(editableHolder.startHour, editableHolder.startMin);
-                String endTimeStr = com.example.chelonia.utils.TimeInputHelper.buildTimeFromFields(editableHolder.endHour, editableHolder.endMin);
+                String startTimeStr = TimeInputHelper.buildTimeForSave(editableHolder.startHour, editableHolder.startMin);
+                String endTimeStr   = TimeInputHelper.buildTimeForSave(editableHolder.endHour, editableHolder.endMin);
+
 
                 try {
                     Calendar base = Calendar.getInstance();

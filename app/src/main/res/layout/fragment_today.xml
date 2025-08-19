@@ -90,18 +90,20 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
+                <TextClock
                     android:id="@+id/time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:format24Hour="HH:mm"
+                    android:format12Hour="hh:mm a"
                     android:fontFamily="@font/inter"
-                    android:text="@string/default_time"
                     android:textColor="#000000"
                     android:textSize="40sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
+
 
                 <TextView
                     android:id="@+id/country"
@@ -169,7 +171,7 @@
         android:layout_marginHorizontal="5dp"
         android:clipToPadding="false"
         android:paddingTop="15dp"
-        android:paddingBottom="450sp"
+        android:paddingBottom="200sp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toBottomOf="@+id/dateAndTimeLayout"/>
 

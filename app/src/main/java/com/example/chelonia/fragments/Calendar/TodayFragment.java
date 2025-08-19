@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 
 import com.example.chelonia.R;
@@ -29,9 +30,8 @@ public class TodayFragment extends BaseNoteFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_today, container, false);
-        // общая инициализация RecyclerView/Adapter
+        // Recycler + scrollListener инициализируются в BaseNoteFragment
         setupRecycler(view);
-        // старт таймеров/обновлений в onResume
         return view;
     }
 
@@ -49,10 +49,11 @@ public class TodayFragment extends BaseNoteFragment {
 
     @Override
     protected long getBaseDateMillisForSaving(Note editableNote) {
-        return editableNote.getDateMillis() != null ? editableNote.getDateMillis() : getStartOfDayMillis(System.currentTimeMillis());
+        return editableNote.getDateMillis() != null
+                ? editableNote.getDateMillis()
+                : getStartOfDayMillis(System.currentTimeMillis());
     }
 
-    // --- UI / time updates (перенесено из старого TodayFragment) ---
     @Override
     public void onResume() {
         super.onResume();
@@ -99,7 +100,6 @@ public class TodayFragment extends BaseNoteFragment {
         TextView dayOfWeekTextView = view.findViewById(R.id.dayOfWeek);
         TextView dateNumberTextView = view.findViewById(R.id.dateNumber);
         TextView monthTextView = view.findViewById(R.id.month);
-        TextView timeTextView = view.findViewById(R.id.time);
         TextView countryTextView = view.findViewById(R.id.country);
 
         Calendar calendar = Calendar.getInstance();
@@ -109,13 +109,11 @@ public class TodayFragment extends BaseNoteFragment {
         int dayNum = Integer.parseInt(new SimpleDateFormat("d", locale).format(calendar.getTime()));
         String ordinalDate = getOrdinalFor(dayNum);
         String month = new SimpleDateFormat("MMMM", locale).format(calendar.getTime());
-        String time = new SimpleDateFormat("HH:mm", locale).format(calendar.getTime());
         String country = locale.getDisplayCountry();
 
         dayOfWeekTextView.setText(capitalize(dayOfWeek));
         dateNumberTextView.setText(ordinalDate);
         monthTextView.setText(capitalize(month.toLowerCase()));
-        timeTextView.setText(time);
         countryTextView.setText(country);
     }
 
@@ -125,9 +123,7 @@ public class TodayFragment extends BaseNoteFragment {
     }
 
     private String getOrdinalFor(int number) {
-        if (number % 100 >= 11 && number % 100 <= 13) {
-            return number + "th";
-        }
+        if (number % 100 >= 11 && number % 100 <= 13) return number + "th";
         switch (number % 10) {
             case 1: return number + "st";
             case 2: return number + "nd";
