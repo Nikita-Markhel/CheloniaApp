@@ -1,5 +1,0 @@
-<resources>
-    <array name="two_digit_filter">
-        <item>android.text.InputFilter$LengthFilter:2</item>
-    </array>
-</resources>
